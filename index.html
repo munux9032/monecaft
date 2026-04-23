@@ -1,0 +1,157 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+  <meta name="apple-mobile-web-app-capable" content="yes">
+  <meta name="mobile-web-app-capable" content="yes">
+  <meta name="theme-color" content="#87ceeb">
+  <title>VoxelCraft</title>
+  <link href="https://fonts.googleapis.com/css2?family=Press+Start+2P&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="css/style.css">
+</head>
+<body>
+  <!-- ローディング画面 -->
+  <div id="loading-screen">
+    <div class="loading-inner">
+      <div class="loading-logo">⛏ VoxelCraft</div>
+      <div class="loading-subtitle">スマホ最適化版 · Java Edition風</div>
+      <div class="loading-bar-wrap">
+        <div id="loading-fill"></div>
+      </div>
+      <p id="loading-msg">初期化中...</p>
+    </div>
+  </div>
+
+  <!-- ゲーム本体 -->
+  <div id="game-container" style="display:none">
+    <canvas id="game-canvas"></canvas>
+
+    <!-- UIオーバーレイ -->
+    <div id="ui-overlay">
+      <!-- 照準 -->
+      <div id="crosshair"></div>
+
+      <!-- ステータスバー (ハートとハンガー) -->
+      <div id="status-bars">
+        <div id="health-bar"></div>
+        <div id="food-bar"></div>
+      </div>
+
+      <!-- XPバー -->
+      <div id="xp-bar-wrap">
+        <div id="xp-fill"></div>
+      </div>
+
+      <!-- ホットバー -->
+      <div id="hotbar-container">
+        <div id="hotbar"></div>
+      </div>
+
+      <!-- オフハンドスロット (Java Edition風・左下) -->
+      <div id="offhand-container">
+        <div id="offhand-slot" class="inv-slot offhand-slot-el"></div>
+        <div class="slot-label">副手 [F]</div>
+      </div>
+
+      <!-- ターゲットブロック名 -->
+      <div id="block-tooltip"></div>
+
+      <!-- ブレークプログレスバー -->
+      <div id="break-progress-wrap" style="display:none">
+        <div id="break-progress-fill"></div>
+      </div>
+    </div>
+
+    <!-- タッチコントロール: 左ゾーン(ジョイスティック) -->
+    <div id="touch-left">
+      <div id="joystick-ring">
+        <div id="joystick-dot"></div>
+      </div>
+    </div>
+
+    <!-- タッチコントロール: 右ゾーン(カメラ) -->
+    <div id="touch-right"></div>
+
+    <!-- アクションボタン群 -->
+    <div id="action-panel">
+      <div id="action-row-top">
+        <button id="btn-sneak" class="action-btn" title="しゃがむ">🦆</button>
+        <button id="btn-sprint" class="action-btn" title="走る">🏃</button>
+        <button id="btn-inv" class="action-btn" title="インベントリ">🎒</button>
+        <button id="btn-swap" class="action-btn" title="副手交換 [F]">🔄</button>
+      </div>
+      <div id="action-row-bot">
+        <button id="btn-break" class="action-btn break-btn" title="破壊(長押し)">⛏</button>
+        <button id="btn-jump" class="action-btn jump-btn" title="ジャンプ">▲</button>
+        <button id="btn-place" class="action-btn place-btn" title="設置">🧱</button>
+      </div>
+    </div>
+
+    <!-- ホットバースロット番号タップ -->
+    <div id="hotbar-slot-nums"></div>
+
+    <!-- インベントリ画面 -->
+    <div id="inv-screen" class="hidden">
+      <div id="inv-panel">
+        <div id="inv-header">
+          <span id="inv-title">インベントリ</span>
+          <button id="inv-close">✕</button>
+        </div>
+        <div id="inv-body">
+          <!-- クラフト(2×2) -->
+          <div id="inv-craft-area">
+            <div id="craft-grid">
+              <div class="inv-slot inv-dark craft-slot" data-craft="0"></div>
+              <div class="inv-slot inv-dark craft-slot" data-craft="1"></div>
+              <div class="inv-slot inv-dark craft-slot" data-craft="2"></div>
+              <div class="inv-slot inv-dark craft-slot" data-craft="3"></div>
+            </div>
+            <div id="craft-arrow">⇒</div>
+            <div class="inv-slot inv-dark" id="craft-result"></div>
+          </div>
+
+          <!-- アーマースロット -->
+          <div id="inv-armor">
+            <div class="inv-slot inv-dark armor-slot" data-armor="0" title="ヘルメット">⛑️</div>
+            <div class="inv-slot inv-dark armor-slot" data-armor="1" title="チェストプレート">🦺</div>
+            <div class="inv-slot inv-dark armor-slot" data-armor="2" title="レギンス">👖</div>
+            <div class="inv-slot inv-dark armor-slot" data-armor="3" title="ブーツ">👟</div>
+          </div>
+
+          <!-- オフハンドスロット (インベントリ内) -->
+          <div id="inv-offhand-wrap">
+            <div class="slot-label-sm">副手</div>
+            <div class="inv-slot inv-dark" id="inv-offhand-slot"></div>
+          </div>
+        </div>
+
+        <!-- メインインベントリ (27スロット) -->
+        <div id="inv-main"></div>
+
+        <!-- ホットバー (インベントリ画面内) -->
+        <div id="inv-hotbar"></div>
+
+        <!-- ドラッグアイテム表示 -->
+        <div id="drag-display" style="display:none"></div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Three.js (r128) -->
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
+
+  <!-- ゲームスクリプト (依存順) -->
+  <script src="js/config.js"></script>
+  <script src="js/blocks.js"></script>
+  <script src="js/items.js"></script>
+  <script src="js/textures.js"></script>
+  <script src="js/world.js"></script>
+  <script src="js/renderer.js"></script>
+  <script src="js/player.js"></script>
+  <script src="js/inventory.js"></script>
+  <script src="js/controls.js"></script>
+  <script src="js/ui.js"></script>
+  <script src="js/game.js"></script>
+</body>
+</html>
